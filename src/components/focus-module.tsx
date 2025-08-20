@@ -78,6 +78,12 @@ export function FocusModule() {
   const [notepadContent, setNotepadContent] = useState("");
   const [currentTime, setCurrentTime] = useState("");
 
+  // Add break-related state
+  const [enableBreaks, setEnableBreaks] = useState(true);
+  const [shortBreak, setShortBreak] = useState(5); // 5 minutes
+  const [longBreak, setLongBreak] = useState(15); // 15 minutes
+  const [cyclesUntilLongBreak, setCyclesUntilLongBreak] = useState(4);
+
   const deviceTimezone = (() => {
     const offset = -new Date().getTimezoneOffset() / 60;
     return `Etc/GMT${offset <= 0 ? "+" : "-"}${Math.abs(offset)}`;
@@ -624,6 +630,15 @@ export function FocusModule() {
                   onEditKeyDown={handleTimerEditKeyDown}
                   getProgress={getProgress}
                   formatTime={formatTime}
+                  // Add the missing break-related props
+                  enableBreaks={enableBreaks}
+                  shortBreak={shortBreak}
+                  longBreak={longBreak}
+                  cyclesUntilLongBreak={cyclesUntilLongBreak}
+                  onEnableBreaksChange={setEnableBreaks}
+                  onShortBreakChange={(minutes) => setShortBreak(minutes)}
+                  onLongBreakChange={(minutes) => setLongBreak(minutes)}
+                  onCyclesUntilLongBreakChange={setCyclesUntilLongBreak}
                 />
 
                 <div className="grid flex-1 grid-cols-2 gap-3">

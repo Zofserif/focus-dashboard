@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
@@ -48,6 +48,10 @@ interface FocusSession {
   completedCycles: number;
 }
 
+interface AudioContextType {
+  play: () => void;
+}
+
 export function FocusModule() {
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
@@ -55,18 +59,9 @@ export function FocusModule() {
   const [completedCycles, setCompletedCycles] = useState(0);
   const [originalSessionTime, setOriginalSessionTime] = useState(25 * 60);
 
-  const [focusTime, setFocusTime] = useState(25);
-  const [shortBreak, setShortBreak] = useState(5);
-  const [longBreak, setLongBreak] = useState(15);
-  const [cyclesUntilLongBreak, setCyclesUntilLongBreak] = useState(4);
-  const [enableBreaks, setEnableBreaks] = useState(true);
-
-  const [hasCustomTimer, setHasCustomTimer] = useState(false);
-  const [customFocusTime, setCustomFocusTime] = useState(25 * 60); // Store custom time in seconds
   const [initialCycle1Timer, setInitialCycle1Timer] = useState<number | null>(
     null,
   ); // Store initial cycle 1 value in seconds
-  const [cycle1FocusTime, setCycle1FocusTime] = useState<number | null>(null);
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState("");
@@ -74,7 +69,6 @@ export function FocusModule() {
 
   const [sessions, setSessions] = useState<FocusSession[]>([]);
   const [currentSessionTime, setCurrentSessionTime] = useState(0);
-  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
 
   const [showFocusPopup, setShowFocusPopup] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -91,7 +85,7 @@ export function FocusModule() {
 
   const [selectedTimezone, setSelectedTimezone] = useState(deviceTimezone);
 
-  const audioRef = useRef<any>(null);
+  const audioRef = useRef<AudioContextType | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const timezones = [
@@ -144,8 +138,11 @@ export function FocusModule() {
 
   useEffect(() => {
     const createBeepSound = () => {
-      const audioContext = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+      const AudioContextConstructor =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext;
+      const audioContext = new AudioContextConstructor();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
@@ -167,6 +164,79 @@ export function FocusModule() {
 
     audioRef.current = { play: createBeepSound };
   }, []);
+
+  const handleSessionComplete = useCallback(() => {
+    setIsRunning(false);
+
+    if (audioRef.current) {
+      audioRef.current.play();
+    }
+
+    if (!isBreak) {
+      const newCompletedCycles = completedCycles + 1;
+      setCompletedCycles(newCompletedCycles);
+
+      if (newCompletedCycles === 1) {
+        // For the first cycle completion, save the timer value that was actually used
+        const actualCycle1Time = originalSessionTime;
+        setInitialCycle1Timer(actualCycle1Time);
+      }
+
+      if (selectedTaskId) {
+        setTasks((prev) =>
+          prev.map((task) =>
+            task.id === selectedTaskId
+              ? { ...task, timeWorked: task.timeWorked + currentSessionTime }
+              : task,
+          ),
+        );
+      }
+
+      const newSession: FocusSession = {
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        focusTime: currentSessionTime,
+        breakTime: 0,
+        completedCycles: newCompletedCycles,
+      };
+      setSessions((prev) => [newSession, ...prev]);
+
+      const nextFocusTime = initialCycle1Timer ?? originalSessionTime;
+      setTimeLeft(nextFocusTime);
+      setOriginalSessionTime(nextFocusTime);
+      setCurrentSessionTime(0);
+      // Auto-start the next cycle
+      setTimeout(() => {
+        setIsRunning(true);
+        if (selectedTaskId) {
+          setShowFocusPopup(true);
+          setIsMinimized(false);
+        }
+      }, 500);
+    } else {
+      setIsBreak(false);
+      const nextFocusTime = initialCycle1Timer ?? originalSessionTime;
+      setTimeLeft(nextFocusTime);
+      setOriginalSessionTime(nextFocusTime);
+      setCurrentSessionTime(0);
+      // Auto-start the focus session after break
+      setTimeout(() => {
+        setIsRunning(true);
+        if (selectedTaskId) {
+          setShowFocusPopup(true);
+          setIsMinimized(false);
+        }
+      }, 500);
+    }
+
+    setShowFocusPopup(false);
+  }, [
+    completedCycles,
+    originalSessionTime,
+    selectedTaskId,
+    currentSessionTime,
+    initialCycle1Timer,
+  ]);
 
   useEffect(() => {
     if (isRunning) {
@@ -192,7 +262,33 @@ export function FocusModule() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning]);
+  }, [isRunning, handleSessionComplete]);
+
+  const startTimer = useCallback(() => {
+    setIsRunning(true);
+
+    if (completedCycles === 0 && !initialCycle1Timer) {
+      setInitialCycle1Timer(originalSessionTime);
+    }
+
+    if (selectedTaskId && !isBreak) {
+      setShowFocusPopup(true);
+      setIsMinimized(false);
+    }
+  }, [
+    completedCycles,
+    initialCycle1Timer,
+    originalSessionTime,
+    selectedTaskId,
+    isBreak,
+  ]);
+
+  const pauseTimer = useCallback(() => {
+    setIsRunning(false);
+    if (!isBreak) {
+      setShowFocusPopup(false);
+    }
+  }, [isBreak]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -223,113 +319,14 @@ export function FocusModule() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isRunning, isEditingTimer, selectedTaskId, isBreak]);
-
-  const handleSessionComplete = () => {
-    setIsRunning(false);
-
-    if (audioRef.current) {
-      audioRef.current.play();
-    }
-
-    if (!isBreak) {
-      const newCompletedCycles = completedCycles + 1;
-      setCompletedCycles(newCompletedCycles);
-
-      if (newCompletedCycles === 1) {
-        // For the first cycle completion, save the timer value that was actually used
-        const actualCycle1Time = originalSessionTime;
-        setCycle1FocusTime(actualCycle1Time);
-        setInitialCycle1Timer(actualCycle1Time);
-      }
-
-      if (selectedTaskId) {
-        setTasks((prev) =>
-          prev.map((task) =>
-            task.id === selectedTaskId
-              ? { ...task, timeWorked: task.timeWorked + currentSessionTime }
-              : task,
-          ),
-        );
-      }
-
-      const newSession: FocusSession = {
-        id: Date.now().toString(),
-        date: new Date().toISOString(),
-        focusTime: currentSessionTime,
-        breakTime: 0,
-        completedCycles: newCompletedCycles,
-      };
-      setSessions((prev) => [newSession, ...prev]);
-
-      if (enableBreaks) {
-        const isLongBreakTime = newCompletedCycles % cyclesUntilLongBreak === 0;
-        const breakTime = (isLongBreakTime ? longBreak : shortBreak) * 60;
-        setIsBreak(true);
-        setTimeLeft(breakTime);
-        setOriginalSessionTime(breakTime);
-        setCurrentSessionTime(0);
-        setShowFocusPopup(false);
-        setTimeout(() => {
-          setIsRunning(true);
-          setSessionStartTime(Date.now());
-        }, 500);
-      } else {
-        const nextFocusTime = initialCycle1Timer || originalSessionTime;
-        setTimeLeft(nextFocusTime);
-        setOriginalSessionTime(nextFocusTime);
-        setCurrentSessionTime(0);
-        // Auto-start the next cycle
-        setTimeout(() => {
-          setIsRunning(true);
-          setSessionStartTime(Date.now());
-          if (selectedTaskId) {
-            setShowFocusPopup(true);
-            setIsMinimized(false);
-          }
-        }, 500);
-      }
-    } else {
-      setIsBreak(false);
-      const nextFocusTime = initialCycle1Timer || originalSessionTime;
-      setTimeLeft(nextFocusTime);
-      setOriginalSessionTime(nextFocusTime);
-      setCurrentSessionTime(0);
-      // Auto-start the focus session after break
-      setTimeout(() => {
-        setIsRunning(true);
-        setSessionStartTime(Date.now());
-        if (selectedTaskId) {
-          setShowFocusPopup(true);
-          setIsMinimized(false);
-        }
-      }, 500);
-    }
-
-    setShowFocusPopup(false);
-  };
-
-  const startTimer = () => {
-    setIsRunning(true);
-    setSessionStartTime(Date.now());
-
-    if (completedCycles === 0 && !initialCycle1Timer) {
-      setInitialCycle1Timer(originalSessionTime);
-      setCycle1FocusTime(originalSessionTime);
-    }
-
-    if (selectedTaskId && !isBreak) {
-      setShowFocusPopup(true);
-      setIsMinimized(false);
-    }
-  };
-
-  const pauseTimer = () => {
-    setIsRunning(false);
-    if (!isBreak) {
-      setShowFocusPopup(false);
-    }
-  };
+  }, [
+    isRunning,
+    isEditingTimer,
+    selectedTaskId,
+    isBreak,
+    pauseTimer,
+    startTimer,
+  ]);
 
   const stopTimer = () => {
     setIsRunning(false);
@@ -344,28 +341,22 @@ export function FocusModule() {
       );
     }
 
-    const resetTime = isBreak
-      ? (completedCycles % cyclesUntilLongBreak === 0
-          ? longBreak
-          : shortBreak) * 60
-      : 25 * 60;
+    const resetTime = 25 * 60;
 
     setTimeLeft(resetTime);
     setOriginalSessionTime(resetTime);
     setCurrentSessionTime(0);
-    setSessionStartTime(null);
     setShowFocusPopup(false);
   };
 
   const resetTimer = () => {
     setIsRunning(false);
     setIsBreak(false);
-    const resetTime = initialCycle1Timer || originalSessionTime;
+    const resetTime = initialCycle1Timer ?? originalSessionTime;
     setTimeLeft(resetTime);
     setOriginalSessionTime(resetTime);
     setCompletedCycles(0);
     setCurrentSessionTime(0);
-    setSessionStartTime(null);
     setShowFocusPopup(false);
   };
 
@@ -383,10 +374,7 @@ export function FocusModule() {
       setTimeLeft(newTime);
       setOriginalSessionTime(newTime);
       setCurrentSessionTime(0);
-      setHasCustomTimer(true);
-      setCustomFocusTime(newTime);
       setInitialCycle1Timer(newTime);
-      setCycle1FocusTime(newTime);
     }
     setIsEditingTimer(false);
   };
@@ -422,8 +410,11 @@ export function FocusModule() {
   const toggleTask = (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId);
     if (task && !task.completed) {
-      const celebrationAudio = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+      const AudioContextConstructor =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext;
+      const celebrationAudio = new AudioContextConstructor();
       const oscillator = celebrationAudio.createOscillator();
       const gainNode = celebrationAudio.createGain();
 
@@ -622,10 +613,6 @@ export function FocusModule() {
                   completedCycles={completedCycles}
                   isEditingTimer={isEditingTimer}
                   editTimeValue={editTimeValue}
-                  enableBreaks={enableBreaks}
-                  shortBreak={shortBreak}
-                  longBreak={longBreak}
-                  cyclesUntilLongBreak={cyclesUntilLongBreak}
                   onStart={startTimer}
                   onPause={pauseTimer}
                   onStop={stopTimer}
@@ -635,10 +622,6 @@ export function FocusModule() {
                   onCancelEdit={cancelTimerEdit}
                   onEditValueChange={setEditTimeValue}
                   onEditKeyDown={handleTimerEditKeyDown}
-                  onEnableBreaksChange={setEnableBreaks}
-                  onShortBreakChange={setShortBreak}
-                  onLongBreakChange={setLongBreak}
-                  onCyclesUntilLongBreakChange={setCyclesUntilLongBreak}
                   getProgress={getProgress}
                   formatTime={formatTime}
                 />

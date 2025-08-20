@@ -201,7 +201,7 @@ export function FocusModule() {
         activeElement &&
         (activeElement.tagName === "INPUT" ||
           activeElement.tagName === "TEXTAREA" ||
-          (activeElement as HTMLElement).contentEditable === "true");
+          activeElement.contentEditable === "true");
 
       if (event.code === "Space" && !isEditingTimer && !isTyping) {
         event.preventDefault();

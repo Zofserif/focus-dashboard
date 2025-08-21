@@ -56,29 +56,25 @@ interface WindowWithAudio extends Window {
 }
 
 export function FocusModule() {
+  // Initialize all states with default values first
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
   const [completedCycles, setCompletedCycles] = useState(0);
   const [originalSessionTime, setOriginalSessionTime] = useState(25 * 60);
-
   const [focusTime, setFocusTime] = useState(25);
   const [initialFocusTime, setInitialFocusTime] = useState(25);
   const [shortBreak, setShortBreak] = useState(5);
   const [enableBreaks, setEnableBreaks] = useState(true);
-
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState("");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-
   const [sessions, setSessions] = useState<FocusSession[]>([]);
   const [currentSessionTime, setCurrentSessionTime] = useState(0);
-
   const [showFocusPopup, setShowFocusPopup] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isEditingTimer, setIsEditingTimer] = useState(false);
   const [editTimeValue, setEditTimeValue] = useState("");
-
   const [notepadContent, setNotepadContent] = useState("");
   const [currentTime, setCurrentTime] = useState("");
 
@@ -120,6 +116,114 @@ export function FocusModule() {
     { label: "UTC+12 (NZST)", value: "Etc/GMT-12" },
   ];
 
+  // Load saved state after component mounts (client-side)
+  useEffect(() => {
+    // Load timer state
+    const savedTimeLeft = localStorage.getItem("focusTimer_timeLeft");
+    if (savedTimeLeft) setTimeLeft(Number.parseInt(savedTimeLeft, 10));
+
+    const savedIsRunning = localStorage.getItem("focusTimer_isRunning");
+    if (savedIsRunning) setIsRunning(savedIsRunning === "true");
+
+    const savedIsBreak = localStorage.getItem("focusTimer_isBreak");
+    if (savedIsBreak) setIsBreak(savedIsBreak === "true");
+
+    const savedCompletedCycles = localStorage.getItem(
+      "focusTimer_completedCycles",
+    );
+    if (savedCompletedCycles)
+      setCompletedCycles(Number.parseInt(savedCompletedCycles, 10));
+
+    const savedOriginalSessionTime = localStorage.getItem(
+      "focusTimer_originalSessionTime",
+    );
+    if (savedOriginalSessionTime)
+      setOriginalSessionTime(Number.parseInt(savedOriginalSessionTime, 10));
+
+    // Load settings
+    const savedFocusTime = localStorage.getItem("focusTimer_focusTime");
+    if (savedFocusTime) setFocusTime(Number.parseInt(savedFocusTime, 10));
+
+    const savedInitialFocusTime = localStorage.getItem(
+      "focusTimer_initialFocusTime",
+    );
+    if (savedInitialFocusTime)
+      setInitialFocusTime(Number.parseInt(savedInitialFocusTime, 10));
+
+    const savedShortBreak = localStorage.getItem("focusTimer_shortBreak");
+    if (savedShortBreak) setShortBreak(Number.parseInt(savedShortBreak, 10));
+
+    const savedEnableBreaks = localStorage.getItem("focusTimer_enableBreaks");
+    if (savedEnableBreaks) setEnableBreaks(savedEnableBreaks === "true");
+
+    // Load tasks and selected task
+    const savedTasks = localStorage.getItem("focusTimer_tasks");
+    if (savedTasks) setTasks(JSON.parse(savedTasks) as Task[]);
+
+    const savedSelectedTaskId = localStorage.getItem("focusTimer_selectedTask");
+    if (savedSelectedTaskId) setSelectedTaskId(savedSelectedTaskId);
+
+    // Load sessions
+    const savedSessions = localStorage.getItem("focusTimer_sessions");
+    if (savedSessions) setSessions(JSON.parse(savedSessions) as FocusSession[]);
+
+    // Load notepad
+    const savedNotepadContent = localStorage.getItem("focusTimer_notes");
+    if (savedNotepadContent) setNotepadContent(savedNotepadContent);
+
+    // Load timezone
+    const savedSelectedTimezone = localStorage.getItem(
+      "focusTimer_selectedTimezone",
+    );
+    if (savedSelectedTimezone) setSelectedTimezone(savedSelectedTimezone);
+  }, []);
+
+  // Save state whenever it changes
+  useEffect(() => {
+    localStorage.setItem("focusTimer_timeLeft", timeLeft.toString());
+    localStorage.setItem("focusTimer_isRunning", isRunning.toString());
+    localStorage.setItem("focusTimer_isBreak", isBreak.toString());
+    localStorage.setItem(
+      "focusTimer_completedCycles",
+      completedCycles.toString(),
+    );
+    localStorage.setItem(
+      "focusTimer_originalSessionTime",
+      originalSessionTime.toString(),
+    );
+  }, [timeLeft, isRunning, isBreak, completedCycles, originalSessionTime]);
+
+  useEffect(() => {
+    localStorage.setItem("focusTimer_tasks", JSON.stringify(tasks));
+  }, [tasks]);
+
+  useEffect(() => {
+    localStorage.setItem("focusTimer_notes", notepadContent);
+  }, [notepadContent]);
+
+  useEffect(() => {
+    localStorage.setItem("focusTimer_sessions", JSON.stringify(sessions));
+  }, [sessions]);
+
+  useEffect(() => {
+    const settings = {
+      focusTime,
+      initialFocusTime,
+      shortBreak,
+      enableBreaks,
+      selectedTimezone,
+    };
+    localStorage.setItem("focusTimer_settings", JSON.stringify(settings));
+  }, [focusTime, initialFocusTime, shortBreak, enableBreaks, selectedTimezone]);
+
+  useEffect(() => {
+    if (selectedTaskId) {
+      localStorage.setItem("focusTimer_selectedTask", selectedTaskId);
+    } else {
+      localStorage.removeItem("focusTimer_selectedTask");
+    }
+  }, [selectedTaskId]);
+
   // Define stopTimer first
   const stopTimer = useCallback(() => {
     setIsRunning(false);
@@ -135,9 +239,13 @@ export function FocusModule() {
     }
 
     if (isBreak) {
-      const breakTime = shortBreak * 60;
+      const breakTime =
+        enableBreaks && shortBreak > 0 ? shortBreak * 60 : focusTime * 60;
       setTimeLeft(breakTime);
       setOriginalSessionTime(breakTime);
+      if (!enableBreaks || shortBreak === 0) {
+        setIsBreak(false);
+      }
     } else {
       const focusTimeSeconds =
         (completedCycles > 0 ? initialFocusTime : focusTime) * 60;
@@ -205,7 +313,7 @@ export function FocusModule() {
         stopTimer();
       }, 100);
 
-      if (enableBreaks) {
+      if (enableBreaks && shortBreak > 0) {
         setTimeout(() => {
           const breakTime = shortBreak * 60;
           setIsBreak(true);
@@ -523,10 +631,16 @@ export function FocusModule() {
 
   const clearNotepad = () => {
     setNotepadContent("");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("focusTimer_notes");
+    }
   };
 
   const clearHistory = () => {
     setSessions([]);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("focusTimer_sessions");
+    }
   };
 
   const copyHistory = async () => {
@@ -728,8 +842,18 @@ export function FocusModule() {
                   onCancelEdit={cancelTimerEdit}
                   onEditValueChange={setEditTimeValue}
                   onEditKeyDown={handleTimerEditKeyDown}
-                  onEnableBreaksChange={setEnableBreaks}
-                  onShortBreakChange={setShortBreak}
+                  onEnableBreaksChange={(enabled) => {
+                    setEnableBreaks(enabled);
+                    if (enabled && shortBreak === 0) {
+                      setShortBreak(5);
+                    }
+                  }}
+                  onShortBreakChange={(value) => {
+                    setShortBreak(value);
+                    if (value === 0) {
+                      setEnableBreaks(false);
+                    }
+                  }}
                   getProgress={getProgress}
                   formatTime={formatTime}
                   focusTime={focusTime}

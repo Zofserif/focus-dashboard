@@ -1,14 +1,14 @@
-import { FocusModule } from "~/components/focus-module"
+import { FocusModule } from "~/components/focus-module";
 
 export default function Home() {
   return (
-    <main className="h-screen bg-background p-2 overflow-hidden">
-      <div className="w-full h-full flex flex-col">
-        <h1 className="text-2xl font-bold text-center mb-4">Focus Dashboard</h1>
+    <main className="bg-background h-screen overflow-hidden p-2">
+      <div className="flex h-full w-full flex-col">
+        <h1 className="mb-4 text-center text-2xl font-bold">STAY FOCUSED</h1>
         <div className="flex-1 overflow-hidden">
           <FocusModule />
         </div>
       </div>
     </main>
-  )
+  );
 }

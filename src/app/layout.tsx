@@ -4,7 +4,7 @@ import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
 export const metadata: Metadata = {
-  title: "Focus Dashboard",
+  title: "Stay Focused",
   description: "Take back your focus and stay lock in",
   icons: [{ rel: "icon", url: "/focus-dashboard.ico" }],
 };

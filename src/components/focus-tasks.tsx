@@ -47,10 +47,13 @@ export function FocusTasksComponent({
     return a.completed ? 1 : -1
   })
 
+  const hasContent = tasks.length > 0
+  const cardHeight = hasContent ? "h-full max-h-[calc(100vh-200px)]" : "h-auto"
+
   return (
     <TooltipProvider>
       <Card
-        className={`transition-all duration-300 flex flex-col h-full max-h-[calc(100vh-100px)] overflow-hidden ${
+        className={`transition-all duration-300 flex flex-col ${cardHeight} overflow-hidden ${
           isRunning && !isBreak && selectedTaskId ? "ring-2 ring-blue-500 bg-blue-50/50" : ""
         }`}
       >
@@ -90,7 +93,7 @@ export function FocusTasksComponent({
             </Button>
           </div>
 
-          <div className="flex-1 overflow-y-auto min-h-0">
+          <div className={`${hasContent ? "flex-1 overflow-y-auto min-h-0" : "flex-shrink-0"}`}>
             <div className="space-y-2">
               {sortedTasks.map((task) => (
                 <div

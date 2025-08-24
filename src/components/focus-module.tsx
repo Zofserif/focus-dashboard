@@ -506,7 +506,7 @@ export function FocusModule() {
 
   const saveTimerEdit = () => {
     const newMinutes = Number.parseInt(editTimeValue);
-    if (newMinutes > 0 && newMinutes <= 120) {
+    if (newMinutes > 0 && newMinutes <= 240) {
       const newTime = newMinutes * 60;
       setTimeLeft(newTime);
       setOriginalSessionTime(newTime);

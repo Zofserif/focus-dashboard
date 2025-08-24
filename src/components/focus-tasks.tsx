@@ -1,31 +1,40 @@
-"use client"
-import { Button } from "~/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card"
-import { Input } from "~/components/ui/input"
-import { Badge } from "~/components/ui/badge"
-import { Plus, Check, X, Clock, Trash2 } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "~/components/ui/tooltip"
+"use client";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
+import { Badge } from "~/components/ui/badge";
+import { Plus, Check, X, Clock, Trash2 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "~/components/ui/tooltip";
 
 interface Task {
-  id: string
-  text: string
-  completed: boolean
-  timeWorked: number // in seconds
+  id: string;
+  text: string;
+  completed: boolean;
+  timeWorked: number; // in seconds
 }
 
 interface FocusTasksProps {
-  tasks: Task[]
-  newTask: string
-  selectedTaskId: string | null
-  isRunning: boolean
-  isBreak: boolean
-  onNewTaskChange: (value: string) => void
-  onAddTask: () => void
-  onToggleTask: (taskId: string) => void
-  onDeleteTask: (taskId: string) => void
-  onSelectTask: (taskId: string) => void
-  onClearCompleted: () => void
-  formatTimeWorked: (seconds: number, includeCurrentSession?: boolean, taskId?: string) => string
+  tasks: Task[];
+  newTask: string;
+  selectedTaskId: string | null;
+  isRunning: boolean;
+  isBreak: boolean;
+  onNewTaskChange: (value: string) => void;
+  onAddTask: () => void;
+  onToggleTask: (taskId: string) => void;
+  onDeleteTask: (taskId: string) => void;
+  onSelectTask: (taskId: string) => void;
+  onClearCompleted: () => void;
+  formatTimeWorked: (
+    seconds: number,
+    includeCurrentSession?: boolean,
+    taskId?: string,
+  ) => string;
 }
 
 export function FocusTasksComponent({
@@ -43,21 +52,23 @@ export function FocusTasksComponent({
   formatTimeWorked,
 }: FocusTasksProps) {
   const sortedTasks = [...tasks].sort((a, b) => {
-    if (a.completed === b.completed) return 0
-    return a.completed ? 1 : -1
-  })
+    if (a.completed === b.completed) return 0;
+    return a.completed ? 1 : -1;
+  });
 
-  const hasContent = tasks.length > 0
-  const cardHeight = hasContent ? "h-full max-h-[calc(100vh-200px)]" : "h-auto"
+  const hasContent = tasks.length > 0;
+  const cardHeight = hasContent ? "h-full max-h-[calc(100vh-200px)]" : "h-auto";
 
   return (
     <TooltipProvider>
       <Card
-        className={`transition-all duration-300 flex flex-col ${cardHeight} overflow-hidden ${
-          isRunning && !isBreak && selectedTaskId ? "ring-2 ring-blue-500 bg-blue-50/50" : ""
+        className={`flex flex-col transition-all duration-300 ${cardHeight} overflow-hidden ${
+          isRunning && !isBreak && selectedTaskId
+            ? "bg-blue-50/50 ring-2 ring-blue-500"
+            : ""
         }`}
       >
-        <CardHeader className="pb-2 px-3 py-2 flex-shrink-0">
+        <CardHeader className="flex-shrink-0 px-3 py-2 pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">Focus Tasks</CardTitle>
             {tasks.some((task) => task.completed) && (
@@ -67,7 +78,7 @@ export function FocusTasksComponent({
                     onClick={onClearCompleted}
                     size="sm"
                     variant="ghost"
-                    className="h-6 w-6 p-0 text-gray-600 hover:text-black hover:bg-gray-100"
+                    className="h-6 w-6 p-0 text-gray-600 hover:bg-gray-100 hover:text-black"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -79,8 +90,8 @@ export function FocusTasksComponent({
             )}
           </div>
         </CardHeader>
-        <CardContent className="px-3 py-0 pb-2 flex-1 flex flex-col min-h-0">
-          <div className="flex gap-2 mb-2 flex-shrink-0">
+        <CardContent className="flex min-h-0 flex-1 flex-col px-3 py-0 pb-2">
+          <div className="mb-2 flex flex-shrink-0 gap-2">
             <Input
               placeholder="Add a new task..."
               value={newTask}
@@ -88,17 +99,21 @@ export function FocusTasksComponent({
               onKeyPress={(e) => e.key === "Enter" && onAddTask()}
               className="h-8 text-sm"
             />
-            <Button onClick={onAddTask} size="sm" className="h-8 w-8 p-0">
-              <Plus className="h-3 w-3" />
-            </Button>
+            {newTask.trim().length > 0 && (
+              <Button onClick={onAddTask} size="sm" className="h-8 w-8 p-0">
+                <Plus className="h-3 w-3" />
+              </Button>
+            )}
           </div>
 
-          <div className={`${hasContent ? "flex-1 overflow-y-auto min-h-0" : "flex-shrink-0"}`}>
+          <div
+            className={`${hasContent ? "min-h-0 flex-1 overflow-y-auto" : "flex-shrink-0"}`}
+          >
             <div className="space-y-2">
               {sortedTasks.map((task) => (
                 <div
                   key={task.id}
-                  className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all text-sm ${
+                  className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2 text-sm transition-all ${
                     task.completed
                       ? "bg-gray-50 opacity-60"
                       : selectedTaskId === task.id
@@ -112,26 +127,30 @@ export function FocusTasksComponent({
                     variant={task.completed ? "default" : "outline"}
                     className={`h-5 w-5 p-0 ${task.completed ? "bg-green-500 hover:bg-green-600" : ""}`}
                     onClick={(e) => {
-                      e.stopPropagation()
-                      onToggleTask(task.id)
+                      e.stopPropagation();
+                      onToggleTask(task.id);
                     }}
                   >
                     {task.completed && <Check className="h-3 w-3" />}
                   </Button>
 
-                  <div className="flex-1 min-w-0">
-                    <div className={`font-medium text-sm ${task.completed ? "line-through text-gray-500" : ""}`}>
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className={`text-sm font-medium ${task.completed ? "text-gray-500 line-through" : ""}`}
+                    >
                       {task.text}
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <div className="text-muted-foreground flex items-center gap-1 text-xs">
                       <Clock className="h-3 w-3" />
-                      <span>{formatTimeWorked(task.timeWorked, true, task.id)}</span>
+                      <span>
+                        {formatTimeWorked(task.timeWorked, true, task.id)}
+                      </span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1">
                     {selectedTaskId === task.id && !task.completed && (
-                      <Badge variant="outline" className="text-xs px-1 py-0">
+                      <Badge variant="outline" className="px-1 py-0 text-xs">
                         {isRunning && !isBreak ? "Focusing" : "Selected"}
                       </Badge>
                     )}
@@ -141,8 +160,8 @@ export function FocusTasksComponent({
                       variant="ghost"
                       className="h-5 w-5 p-0 text-red-500 hover:text-red-700"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        onDeleteTask(task.id)
+                        e.stopPropagation();
+                        onDeleteTask(task.id);
                       }}
                     >
                       <X className="h-3 w-3" />
@@ -152,7 +171,7 @@ export function FocusTasksComponent({
               ))}
 
               {tasks.length === 0 && (
-                <div className="text-center py-4 text-muted-foreground text-sm">
+                <div className="text-muted-foreground py-4 text-center text-sm">
                   No tasks yet. Add one above to get started!
                 </div>
               )}
@@ -161,5 +180,5 @@ export function FocusTasksComponent({
         </CardContent>
       </Card>
     </TooltipProvider>
-  )
+  );
 }

@@ -259,10 +259,11 @@ export function FocusModule() {
     selectedTaskId,
     currentSessionTime,
     isBreak,
+    enableBreaks,
     shortBreak,
+    focusTime,
     completedCycles,
     initialFocusTime,
-    focusTime,
   ]);
 
   // Now define handleSessionComplete

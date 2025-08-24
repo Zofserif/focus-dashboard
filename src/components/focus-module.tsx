@@ -69,6 +69,7 @@ export function FocusModule() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState("");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [sessionTaskId, setSessionTaskId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<FocusSession[]>([]);
   const [currentSessionTime, setCurrentSessionTime] = useState(0);
   const [showFocusPopup, setShowFocusPopup] = useState(false);
@@ -163,6 +164,9 @@ export function FocusModule() {
     const savedSelectedTaskId = localStorage.getItem("focusTimer_selectedTask");
     if (savedSelectedTaskId) setSelectedTaskId(savedSelectedTaskId);
 
+    const savedSessionTaskId = localStorage.getItem("focusTimer_sessionTaskId");
+    if (savedSessionTaskId) setSessionTaskId(savedSessionTaskId);
+
     // Load sessions
     const savedSessions = localStorage.getItem("focusTimer_sessions");
     if (savedSessions) setSessions(JSON.parse(savedSessions) as FocusSession[]);
@@ -228,10 +232,10 @@ export function FocusModule() {
   const stopTimer = useCallback(() => {
     setIsRunning(false);
 
-    if (selectedTaskId && currentSessionTime > 0 && !isBreak) {
+    if (sessionTaskId && currentSessionTime > 0 && !isBreak) {
       setTasks((prev) =>
         prev.map((task) =>
-          task.id === selectedTaskId
+          task.id === sessionTaskId
             ? { ...task, timeWorked: task.timeWorked + currentSessionTime }
             : task,
         ),
@@ -255,8 +259,9 @@ export function FocusModule() {
 
     setCurrentSessionTime(0);
     setShowFocusPopup(false);
+    setSessionTaskId(null);
   }, [
-    selectedTaskId,
+    sessionTaskId,
     currentSessionTime,
     isBreak,
     enableBreaks,
@@ -282,20 +287,20 @@ export function FocusModule() {
         setInitialFocusTime(focusTime);
       }
 
-      if (selectedTaskId) {
+      if (sessionTaskId) {
         const focusTimeDuration =
           initialFocusTime > 0 ? initialFocusTime * 60 : focusTime * 60;
         setTasks((prev) =>
           prev.map((task) =>
-            task.id === selectedTaskId
+            task.id === sessionTaskId
               ? { ...task, timeWorked: task.timeWorked + focusTimeDuration }
               : task,
           ),
         );
       }
 
-      const selectedTaskForHistory = selectedTaskId
-        ? tasks.find((t) => t.id === selectedTaskId)
+      const selectedTaskForHistory = sessionTaskId
+        ? tasks.find((t) => t.id === sessionTaskId)
         : null;
       const fullTimerDuration =
         initialFocusTime > 0 ? initialFocusTime * 60 : focusTime * 60;
@@ -351,7 +356,7 @@ export function FocusModule() {
     completedCycles,
     focusTime,
     initialFocusTime,
-    selectedTaskId,
+    sessionTaskId,
     tasks,
     enableBreaks,
     shortBreak,
@@ -363,6 +368,7 @@ export function FocusModule() {
     setIsRunning(true);
 
     if (selectedTaskId && !isBreak) {
+      setSessionTaskId(selectedTaskId);
       setShowFocusPopup(true);
       setIsMinimized(false);
     }
@@ -370,10 +376,23 @@ export function FocusModule() {
 
   const pauseTimer = useCallback(() => {
     setIsRunning(false);
+
+    // Save current session time to the active task when pausing
+    if (sessionTaskId && currentSessionTime > 0 && !isBreak) {
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === sessionTaskId
+            ? { ...task, timeWorked: task.timeWorked + currentSessionTime }
+            : task,
+        ),
+      );
+      setCurrentSessionTime(0); // Reset session time after saving
+    }
+
     if (!isBreak) {
       setShowFocusPopup(false);
     }
-  }, [isBreak]);
+  }, [sessionTaskId, currentSessionTime, isBreak]);
 
   const resetTimer = useCallback(() => {
     setIsRunning(false);
@@ -385,6 +404,7 @@ export function FocusModule() {
     setCompletedCycles(0);
     setCurrentSessionTime(0);
     setShowFocusPopup(false);
+    setSessionTaskId(null);
   }, [completedCycles, initialFocusTime, focusTime]);
 
   useEffect(() => {
@@ -672,6 +692,24 @@ export function FocusModule() {
 
   const selectTask = (taskId: string) => {
     if (tasks.find((t) => t.id === taskId)?.completed) return;
+
+    // Save current session time to previous task when switching tasks
+    if (
+      sessionTaskId &&
+      sessionTaskId !== taskId &&
+      currentSessionTime > 0 &&
+      !isBreak
+    ) {
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === sessionTaskId
+            ? { ...task, timeWorked: task.timeWorked + currentSessionTime }
+            : task,
+        ),
+      );
+      setCurrentSessionTime(0); // Reset session time for new task
+    }
+
     setSelectedTaskId(selectedTaskId === taskId ? null : taskId);
   };
 
@@ -690,7 +728,7 @@ export function FocusModule() {
 
     if (
       includeCurrentSession &&
-      taskId === selectedTaskId &&
+      taskId === sessionTaskId &&
       currentSessionTime > 0 &&
       !isBreak
     ) {
@@ -718,8 +756,8 @@ export function FocusModule() {
     return Math.max(0, Math.min(100, progress));
   };
 
-  const selectedTask = selectedTaskId
-    ? tasks.find((t) => t.id === selectedTaskId)
+  const sessionTask = selectedTaskId
+    ? tasks.find((t) => t.id === sessionTaskId)
     : null;
 
   const hasContent =
@@ -1004,7 +1042,7 @@ export function FocusModule() {
           </CardContent>
         </Card>
 
-        {showFocusPopup && selectedTask && (
+        {showFocusPopup && sessionTask && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <Card
               className={`mx-4 w-full max-w-md ${isMinimized ? "h-20" : ""} transition-all duration-300`}
@@ -1051,14 +1089,14 @@ export function FocusModule() {
                     <div className="mb-1 font-medium text-blue-900">
                       Current Focus Task:
                     </div>
-                    <div className="text-blue-800">{selectedTask.text}</div>
+                    <div className="text-blue-800">{sessionTask.text}</div>
                     <div className="mt-2 flex items-center gap-1 text-sm text-blue-600">
                       <Clock className="h-3 w-3" />
                       Total time worked:{" "}
                       {formatTimeWorked(
-                        selectedTask.timeWorked,
+                        sessionTask.timeWorked,
                         true,
-                        selectedTask.id,
+                        sessionTask.id,
                       )}
                     </div>
                   </div>

@@ -10,6 +10,16 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from "~/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
+
+import { useState, useEffect } from "react";
 
 interface BrainDumpProps {
   notepadContent: string;
@@ -22,6 +32,23 @@ export function BrainDumpComponent({
   onContentChange,
   onClear,
 }: BrainDumpProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (showDeleteConfirm) {
+        if (event.key === "Escape") {
+          setShowDeleteConfirm(false);
+        } else if (event.key === "Enter") {
+          onClear();
+          setShowDeleteConfirm(false);
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [showDeleteConfirm, onClear]);
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(notepadContent);
@@ -62,7 +89,7 @@ export function BrainDumpComponent({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      onClick={onClear}
+                      onClick={() => setShowDeleteConfirm(true)}
                       size="sm"
                       variant="ghost"
                       className="h-6 w-6 p-0 text-gray-600 hover:bg-gray-100 hover:text-black"
@@ -98,6 +125,36 @@ export function BrainDumpComponent({
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Clear All Notes</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to clear all notes? This action cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+              autoFocus
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                onClear();
+                setShowDeleteConfirm(false);
+              }}
+            >
+              Clear All
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 }

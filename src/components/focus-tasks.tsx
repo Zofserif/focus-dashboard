@@ -10,6 +10,15 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from "~/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
+import { useState, useEffect } from "react";
 
 interface Task {
   id: string;
@@ -51,6 +60,41 @@ export function FocusTasksComponent({
   onClearCompleted,
   formatTimeWorked,
 }: FocusTasksProps) {
+  const [showDeleteTaskConfirm, setShowDeleteTaskConfirm] = useState(false);
+  const [showClearCompletedConfirm, setShowClearCompletedConfirm] =
+    useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (showDeleteTaskConfirm || showClearCompletedConfirm) {
+        if (event.key === "Escape") {
+          setShowDeleteTaskConfirm(false);
+          setShowClearCompletedConfirm(false);
+          setTaskToDelete(null);
+        } else if (event.key === "Enter") {
+          if (showDeleteTaskConfirm && taskToDelete) {
+            onDeleteTask(taskToDelete);
+            setShowDeleteTaskConfirm(false);
+            setTaskToDelete(null);
+          } else if (showClearCompletedConfirm) {
+            onClearCompleted();
+            setShowClearCompletedConfirm(false);
+          }
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [
+    showDeleteTaskConfirm,
+    showClearCompletedConfirm,
+    taskToDelete,
+    onDeleteTask,
+    onClearCompleted,
+  ]);
+
   const sortedTasks = [...tasks].sort((a, b) => {
     if (a.completed === b.completed) return 0;
     return a.completed ? 1 : -1;
@@ -75,7 +119,7 @@ export function FocusTasksComponent({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    onClick={onClearCompleted}
+                    onClick={() => setShowClearCompletedConfirm(true)}
                     size="sm"
                     variant="ghost"
                     className="h-6 w-6 p-0 text-gray-600 hover:bg-gray-100 hover:text-black"
@@ -179,6 +223,78 @@ export function FocusTasksComponent({
           </div>
         </CardContent>
       </Card>
+
+      <Dialog
+        open={showDeleteTaskConfirm}
+        onOpenChange={setShowDeleteTaskConfirm}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Task</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this task? This action cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDeleteTaskConfirm(false);
+                setTaskToDelete(null);
+              }}
+              autoFocus
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (taskToDelete) {
+                  onDeleteTask(taskToDelete);
+                  setShowDeleteTaskConfirm(false);
+                  setTaskToDelete(null);
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showClearCompletedConfirm}
+        onOpenChange={setShowClearCompletedConfirm}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Clear Completed Tasks</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to clear all completed tasks? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowClearCompletedConfirm(false)}
+              autoFocus
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                onClearCompleted();
+                setShowClearCompletedConfirm(false);
+              }}
+            >
+              Clear All
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 }

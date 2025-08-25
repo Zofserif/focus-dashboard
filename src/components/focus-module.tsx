@@ -33,6 +33,7 @@ import { Progress } from "~/components/ui/progress";
 import { TimerSection } from "./timer-section";
 import { FocusTasksComponent } from "./focus-tasks";
 import { BrainDumpComponent } from "./brain-dump";
+import { set } from "zod";
 
 interface Task {
   id: string;
@@ -662,6 +663,7 @@ export function FocusModule() {
     if (typeof window !== "undefined") {
       localStorage.removeItem("focusTimer_sessions");
     }
+    setShowDeleteConfirm(false);
   };
 
   const copyHistory = async () => {
@@ -685,6 +687,12 @@ export function FocusModule() {
 
     try {
       await navigator.clipboard.writeText(historyText);
+      setShowCopyNotification(true);
+      setCopyButtonText("Copied");
+      setTimeout(() => {
+        setCopyButtonText("Copy");
+        setShowCopyNotification(false);
+      }, 500);
     } catch (err) {
       console.error("Failed to copy history:", err);
     }
@@ -759,6 +767,10 @@ export function FocusModule() {
   const sessionTask = selectedTaskId
     ? tasks.find((t) => t.id === sessionTaskId)
     : null;
+
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
+  const [copyButtonText, setCopyButtonText] = useState("Copy");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const hasContent =
     tasks.length > 0 ||
@@ -953,7 +965,7 @@ export function FocusModule() {
                             variant="outline"
                             className="h-7 bg-transparent px-2"
                           >
-                            Copy
+                            {copyButtonText}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -963,7 +975,7 @@ export function FocusModule() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
-                            onClick={clearHistory}
+                            onClick={() => setShowDeleteConfirm(true)}
                             size="sm"
                             variant="outline"
                             className="h-7 bg-transparent px-2 text-red-600 hover:text-red-700"
@@ -979,64 +991,106 @@ export function FocusModule() {
                   )}
                 </div>
 
-                <div className="space-y-3">
-                  {sessions.length === 0 ? (
-                    <div className="text-muted-foreground py-6 text-center text-sm">
-                      No focus sessions yet. Complete a focus session to see
-                      your history!
-                    </div>
-                  ) : (
-                    sessions.map((session) => (
-                      <Card key={session.id}>
-                        <CardContent className="px-4 pt-3 pb-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="text-sm font-medium">
-                                {new Date(session.date).toLocaleDateString()}
-                              </div>
-                              <div className="text-muted-foreground text-xs">
-                                {new Date(session.date).toLocaleTimeString()}
-                              </div>
-                              {session.taskName && (
-                                <div
-                                  className={`mt-1 text-xs font-medium ${
-                                    session.taskName.includes("✅")
-                                      ? "text-green-600"
-                                      : "text-blue-600"
-                                  }`}
-                                >
-                                  {session.taskName.includes("✅")
-                                    ? "✅"
-                                    : "📋"}{" "}
-                                  {session.taskName
-                                    .replace("✅ ", "")
-                                    .replace(" (Completed)", "")}
-                                </div>
-                              )}
+                {showDeleteConfirm && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <Card className="mx-4 w-full max-w-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">
+                          Confirm Delete
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <p className="text-muted-foreground text-sm">
+                          Are you sure you want to delete all history logs? This
+                          action cannot be undone.
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => setShowDeleteConfirm(false)}
+                            variant="outline"
+                            className="flex-1 bg-transparent"
+                            onKeyDown={(e) => {
+                              if (e.key === "Escape") {
+                                e.preventDefault();
+                                setShowDeleteConfirm(false);
+                              }
+                            }}
+                            autoFocus
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={clearHistory}
+                            variant="destructive"
+                            className="flex-1"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                clearHistory();
+                              }
+                            }}
+                          >
+                            Delete All
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+                {sessions.length === 0 ? (
+                  <div className="text-muted-foreground py-6 text-center text-sm">
+                    No focus sessions yet. Complete a focus session to see your
+                    history!
+                  </div>
+                ) : (
+                  sessions.map((session) => (
+                    <Card key={session.id}>
+                      <CardContent className="px-4 pt-3 pb-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-sm font-medium">
+                              {new Date(session.date).toLocaleDateString()}
                             </div>
-                            <div className="text-right">
-                              <div className="text-sm font-medium">
-                                {session.taskName?.includes("✅")
-                                  ? formatTimeWorked(session.focusTime)
-                                  : formatTime(session.focusTime)}
-                              </div>
-                              <div className="text-muted-foreground text-xs">
-                                {session.taskName?.includes("✅")
-                                  ? "Task Completed"
-                                  : "Focus Session"}
-                              </div>
-                              {session.completedCycles > 0 && (
-                                <div className="text-muted-foreground text-xs">
-                                  {session.completedCycles} cycles
-                                </div>
-                              )}
+                            <div className="text-muted-foreground text-xs">
+                              {new Date(session.date).toLocaleTimeString()}
                             </div>
+                            {session.taskName && (
+                              <div
+                                className={`mt-1 text-xs font-medium ${
+                                  session.taskName.includes("✅")
+                                    ? "text-green-600"
+                                    : "text-blue-600"
+                                }`}
+                              >
+                                {session.taskName.includes("✅") ? "✅" : "📋"}{" "}
+                                {session.taskName
+                                  .replace("✅ ", "")
+                                  .replace(" (Completed)", "")}
+                              </div>
+                            )}
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">
+                              {session.taskName?.includes("✅")
+                                ? formatTimeWorked(session.focusTime)
+                                : formatTime(session.focusTime)}
+                            </div>
+                            <div className="text-muted-foreground text-xs">
+                              {session.taskName?.includes("✅")
+                                ? "Task Completed"
+                                : "Focus Session"}
+                            </div>
+                            {session.completedCycles > 0 && (
+                              <div className="text-muted-foreground text-xs">
+                                {session.completedCycles} cycles
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>
@@ -1126,6 +1180,15 @@ export function FocusModule() {
                 </CardContent>
               )}
             </Card>
+          </div>
+        )}
+
+        {showCopyNotification && (
+          <div className="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white shadow-lg">
+            <div className="h-2 w-2 rounded-full bg-white"></div>
+            <span className="text-sm font-medium">
+              History copied to clipboard!
+            </span>
           </div>
         )}
 

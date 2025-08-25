@@ -5,7 +5,15 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
 import { Progress } from "~/components/ui/progress";
-import { Play, Pause, Square, Clock, Check, X, Settings } from "lucide-react";
+import {
+  Play,
+  Pause,
+  Square,
+  RotateCcw,
+  Check,
+  X,
+  Settings,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -264,7 +272,7 @@ export function TimerSection({
                     variant="ghost"
                     className="text-muted-foreground hover:text-foreground ml-1 h-4 w-4 p-0"
                   >
-                    <Clock className="h-3 w-3" />
+                    <RotateCcw className="h-3 w-3" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>

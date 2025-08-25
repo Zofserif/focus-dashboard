@@ -196,13 +196,18 @@ export function TimerSection({
                   {formatDisplayTime(timeLeft)}
                 </div>
 
-                {showSettings && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`h-8 w-8 p-0 ${!showSettings ? "invisible" : ""}`}
+                      disabled={!showSettings}
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  {showSettings && (
                     <DropdownMenuContent className="w-80 p-4" align="end">
                       <div className="space-y-4">
                         <div className="text-sm font-semibold">
@@ -263,8 +268,8 @@ export function TimerSection({
                         </div>
                       </div>
                     </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
+                  )}
+                </DropdownMenu>
               </div>
             </div>
           )}

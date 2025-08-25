@@ -777,6 +777,28 @@ export function FocusModule() {
     sessions.length > 0 ||
     isRunning;
 
+  useEffect(() => {
+    const handleDeleteDialogKeyDown = (e: KeyboardEvent) => {
+      if (showDeleteConfirm) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          clearHistory();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          setShowDeleteConfirm(false);
+        }
+      }
+    };
+
+    if (showDeleteConfirm) {
+      window.addEventListener("keydown", handleDeleteDialogKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleDeleteDialogKeyDown);
+    };
+  }, [showDeleteConfirm]);
+
   return (
     <TooltipProvider>
       <div className="mx-auto flex h-screen w-full flex-col p-1">
@@ -1022,12 +1044,6 @@ export function FocusModule() {
                             onClick={clearHistory}
                             variant="destructive"
                             className="flex-1"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                clearHistory();
-                              }
-                            }}
                           >
                             Delete All
                           </Button>

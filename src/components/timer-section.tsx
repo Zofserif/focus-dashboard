@@ -132,18 +132,36 @@ export function TimerSection({
             <div className="flex items-center gap-4">
               <div className="flex flex-col items-center gap-1">
                 {!isRunning ? (
-                  <Button onClick={onStart} size="sm" className="h-8 w-8 p-0">
-                    <Play className="h-4 w-4" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={onStart}
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                      >
+                        <Play className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Start</p>
+                    </TooltipContent>
+                  </Tooltip>
                 ) : (
-                  <Button
-                    onClick={onPause}
-                    size="sm"
-                    variant="secondary"
-                    className="h-8 w-8 p-0"
-                  >
-                    <Pause className="h-4 w-4" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={onPause}
+                        size="sm"
+                        variant="secondary"
+                        className="h-8 w-8 p-0"
+                      >
+                        <Pause className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Pause</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
                 {!isAtInitialState && (
                   <Tooltip>

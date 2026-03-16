@@ -4,8 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
+  --font-sans:
+    var(--font-manrope), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: var(--font-cormorant), Georgia, serif;
 }
 
 @theme inline {
@@ -47,79 +49,227 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --radius: 1.5rem;
+  --background: oklch(0.2 0.02 70);
+  --foreground: oklch(0.97 0.01 80);
+  --card: oklch(0.26 0.02 70 / 0.52);
+  --card-foreground: oklch(0.98 0.01 85);
+  --popover: oklch(0.23 0.02 70 / 0.94);
+  --popover-foreground: oklch(0.98 0.01 85);
+  --primary: oklch(0.82 0.09 82);
+  --primary-foreground: oklch(0.23 0.02 70);
+  --secondary: oklch(0.3 0.02 70 / 0.7);
+  --secondary-foreground: oklch(0.95 0.01 85);
+  --muted: oklch(0.28 0.02 70 / 0.6);
+  --muted-foreground: oklch(0.78 0.02 82);
+  --accent: oklch(0.75 0.08 157 / 0.6);
+  --accent-foreground: oklch(0.17 0.02 70);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: oklch(0.95 0.01 85 / 0.15);
+  --input: oklch(0.98 0.01 85 / 0.08);
+  --ring: oklch(0.82 0.09 82 / 0.7);
+  --chart-1: oklch(0.82 0.09 82);
+  --chart-2: oklch(0.74 0.11 156);
+  --chart-3: oklch(0.7 0.05 232);
+  --chart-4: oklch(0.66 0.12 32);
+  --chart-5: oklch(0.6 0.08 260);
+  --sidebar: oklch(0.24 0.02 70 / 0.84);
+  --sidebar-foreground: oklch(0.98 0.01 85);
+  --sidebar-primary: oklch(0.82 0.09 82);
+  --sidebar-primary-foreground: oklch(0.17 0.02 70);
+  --sidebar-accent: oklch(0.74 0.11 156 / 0.32);
+  --sidebar-accent-foreground: oklch(0.98 0.01 85);
+  --sidebar-border: oklch(0.95 0.01 85 / 0.12);
+  --sidebar-ring: oklch(0.82 0.09 82 / 0.75);
 }
 
 @layer base {
+  html {
+    color-scheme: dark;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 65%, transparent);
+    color: var(--foreground);
+  }
+
   body {
     @apply bg-background text-foreground;
+    background-image: linear-gradient(135deg, #080917, #140b2f);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+  }
+
+  input,
+  textarea {
+    @apply placeholder:text-muted-foreground;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.2),
+        rgba(255, 255, 255, 0.06)
+      ),
+      rgba(17, 21, 24, 0.3);
+    border: 1px solid rgba(255, 247, 231, 0.16);
+    box-shadow:
+      0 22px 60px rgba(4, 7, 10, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(26px);
+  }
+
+  .glow-ring {
+    box-shadow:
+      0 0 0 1px rgba(255, 244, 217, 0.16),
+      0 0 42px rgba(246, 201, 104, 0.15);
+  }
+
+  .text-shadow-soft {
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.28);
+  }
+
+  .hero-gradient-screen {
+    background:
+      radial-gradient(
+        circle at 70% 28%,
+        rgba(255, 68, 128, 0.44),
+        transparent 44%
+      ),
+      radial-gradient(
+        circle at 24% 80%,
+        rgba(124, 58, 237, 0.54),
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 40% 72%,
+        rgba(253, 224, 200, 0.24),
+        transparent 42%
+      ),
+      linear-gradient(125deg, rgba(10, 8, 35, 0.86), rgba(43, 9, 64, 0.76));
+  }
+
+  .hero-film {
+    background:
+      radial-gradient(
+        circle at 18% 22%,
+        rgba(69, 97, 255, 0.36),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 82% 44%,
+        rgba(255, 60, 125, 0.3),
+        transparent 42%
+      ),
+      linear-gradient(160deg, rgba(11, 12, 24, 0.74), rgba(7, 7, 17, 0.78));
+    mix-blend-mode: screen;
+  }
+
+  .hero-blackout {
+    background: rgba(2, 2, 8, 0.76);
+  }
+
+  .hero-blur-orb {
+    filter: blur(80px);
+    opacity: 0.66;
+    border-radius: 999px;
+    pointer-events: none;
+  }
+
+  .hero-quote {
+    color: rgba(255, 255, 255, 0.94);
+    font-weight: 700;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .hero-time {
+    color: white;
+    font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    text-shadow: 0 14px 44px rgba(0, 0, 0, 0.35);
+  }
+
+  .dock {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(6, 8, 24, 0.56);
+    padding: 0.32rem;
+    backdrop-filter: blur(14px);
+    box-shadow:
+      0 10px 30px rgba(0, 0, 0, 0.36),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  }
+
+  .dock-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(12, 14, 34, 0.64);
+    color: rgba(255, 255, 255, 0.8);
+    transition: all 180ms ease;
+  }
+
+  .dock-btn:hover {
+    color: white;
+    border-color: rgba(255, 255, 255, 0.24);
+    background: rgba(40, 44, 92, 0.76);
+  }
+
+  .dock-btn-active {
+    color: white;
+    border-color: rgba(173, 123, 255, 0.9);
+    background:
+      radial-gradient(circle at top, rgba(178, 108, 255, 0.9), transparent 68%),
+      rgba(74, 24, 158, 0.82);
+    box-shadow: 0 0 0 1px rgba(203, 171, 255, 0.28);
+  }
+
+  .control-panel {
+    border-radius: 1.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0)),
+      rgba(13, 12, 33, 0.74);
+    padding: 1rem;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+  }
+
+  .control-eyebrow {
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.56);
+  }
+
+  .control-title {
+    margin-top: 0.35rem;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.95);
   }
 }
